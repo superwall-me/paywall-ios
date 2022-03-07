@@ -15,6 +15,7 @@ import Foundation
 import StoreKit
 
 class ProductsManager: NSObject {
+
 	private let productsRequestFactory: ProductsRequestFactory
 	private var cachedProductsByIdentifier: [String: SKProduct] = [:]
 	private let queue = DispatchQueue(label: "ProductsManager")
@@ -25,49 +26,28 @@ class ProductsManager: NSObject {
 		self.productsRequestFactory = productsRequestFactory
 	}
 
-	func products(
-    withIdentifiers identifiers: Set<String>,
-    completion: @escaping (Set<SKProduct>) -> Void
-  ) {
-		if identifiers.isEmpty {
+	func products(withIdentifiers identifiers: Set<String>,
+				  completion: @escaping (Set<SKProduct>) -> Void) {
+		guard identifiers.count > 0 else {
 			completion([])
 			return
 		}
-
 		queue.async { [self] in
 			let productsAlreadyCached = self.cachedProductsByIdentifier.filter { key, _ in identifiers.contains(key) }
 			if productsAlreadyCached.count == identifiers.count {
 				let productsAlreadyCachedSet = Set(productsAlreadyCached.values)
-				Logger.debug(
-          logLevel: .debug,
-          scope: .productsManager,
-          message: "Products Already Cached",
-          info: ["product_ids": identifiers],
-          error: nil
-        )
+				Logger.debug(logLevel: .debug, scope: .productsManager, message: "Products Already Cached", info: ["product_ids": identifiers], error: nil)
 				completion(productsAlreadyCachedSet)
 				return
 			}
 
 			if let existingHandlers = self.completionHandlers[identifiers] {
-				Logger.debug(
-          logLevel: .debug,
-          scope: .productsManager,
-          message: "Found Existing Product Request",
-          info: ["product_ids": identifiers],
-          error: nil
-        )
+				Logger.debug(logLevel: .debug, scope: .productsManager, message: "Found Existing Product Request", info: ["product_ids": identifiers], error: nil)
 				self.completionHandlers[identifiers] = existingHandlers + [completion]
 				return
 			}
 
-			Logger.debug(
-        logLevel: .debug,
-        scope: .productsManager,
-        message: "Creating New Request",
-        info: ["product_ids": identifiers],
-        error: nil
-      )
+			Logger.debug(logLevel: .debug, scope: .productsManager, message: "Creating New Request", info: ["product_ids": identifiers], error: nil)
 			let request = self.productsRequestFactory.request(productIdentifiers: identifiers)
 			request.delegate = self
 			self.completionHandlers[identifiers] = [completion]
@@ -81,36 +61,20 @@ class ProductsManager: NSObject {
 			self.cachedProductsByIdentifier[product.productIdentifier] = product
 		}
 	}
+
 }
 
 extension ProductsManager: SKProductsRequestDelegate {
+
 	func productsRequest(_ request: SKProductsRequest, didReceive response: SKProductsResponse) {
 		queue.async { [self] in
-			Logger.debug(
-        logLevel: .debug,
-        scope: .productsManager,
-        message: "Fetched Product",
-        info: ["request": request.debugDescription],
-        error: nil
-      )
+			Logger.debug(logLevel: .debug, scope: .productsManager, message: "Fetched Product", info: ["request": request.debugDescription], error: nil)
 			guard let requestProducts = self.productsByRequests[request] else {
-				Logger.debug(
-          logLevel: .warn,
-          scope: .productsManager,
-          message: "Requested Products Not Found",
-          info: ["request": request.debugDescription],
-          error: nil
-        )
+				Logger.debug(logLevel: .warn, scope: .productsManager, message: "Requested Products Not Found", info: ["request": request.debugDescription], error: nil)
 				return
 			}
 			guard let completionBlocks = self.completionHandlers[requestProducts] else {
-				Logger.debug(
-          logLevel: .error,
-          scope: .productsManager,
-          message: "Completion Handler Not Found",
-          info: ["products": requestProducts, "request": request.debugDescription],
-          error: nil
-        )
+				Logger.debug(logLevel: .error, scope: .productsManager, message: "Completion Handler Not Found", info: ["products": requestProducts, "request": request.debugDescription], error: nil)
 				return
 			}
 
@@ -125,43 +89,19 @@ extension ProductsManager: SKProductsRequestDelegate {
 	}
 
 	func requestDidFinish(_ request: SKRequest) {
-		Logger.debug(
-      logLevel: .debug,
-      scope: .productsManager,
-      message: "Request Complete",
-      info: ["request": request.debugDescription],
-      error: nil
-    )
+		Logger.debug(logLevel: .debug, scope: .productsManager, message: "Request Complete", info: ["request": request.debugDescription], error: nil)
 		request.cancel()
 	}
 
 	func request(_ request: SKRequest, didFailWithError error: Error) {
 		queue.async { [self] in
-			Logger.debug(
-        logLevel: .error,
-        scope: .productsManager,
-        message: "Request Failed",
-        info: ["request": request.debugDescription],
-        error: error
-      )
+			Logger.debug(logLevel: .error, scope: .productsManager, message: "Request Failed", info: ["request": request.debugDescription], error: error)
 			guard let products = self.productsByRequests[request] else {
-				Logger.debug(
-          logLevel: .error,
-          scope: .productsManager,
-          message: "Requested Products Not Found",
-          info: ["request": request.debugDescription],
-          error: error
-        )
+				Logger.debug(logLevel: .error, scope: .productsManager, message: "Requested Products Not Found", info: ["request": request.debugDescription], error: error)
 				return
 			}
 			guard let completionBlocks = self.completionHandlers[products] else {
-				Logger.debug(
-          logLevel: .error,
-          scope: .productsManager,
-          message: "Callback Not Found for Failed Request",
-          info: ["request": request.debugDescription],
-          error: error
-        )
+				Logger.debug(logLevel: .error, scope: .productsManager, message: "Callback Not Found for Failed Request", info: ["request": request.debugDescription], error: error)
 				return
 			}
 
@@ -173,9 +113,11 @@ extension ProductsManager: SKProductsRequestDelegate {
 		}
 		request.cancel()
 	}
+
 }
 
 private extension ProductsManager {
+
 	func cacheProducts(_ products: [SKProduct]) {
 		let productsByIdentifier = products.reduce(into: [:]) { resultDict, product in
 			resultDict[product.productIdentifier] = product
@@ -183,11 +125,14 @@ private extension ProductsManager {
 
 		cachedProductsByIdentifier = cachedProductsByIdentifier.merging(productsByIdentifier)
 	}
+
 }
 
 
 class ProductsRequestFactory {
+
 	func request(productIdentifiers: Set<String>) -> SKProductsRequest {
 		return SKProductsRequest(productIdentifiers: productIdentifiers)
 	}
+
 }

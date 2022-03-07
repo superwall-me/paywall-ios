@@ -8,18 +8,22 @@
 import Foundation
 import UIKit
 
-final class SWLocalizationViewController: UITableViewController {
+
+
+internal class SWLocalizationViewController: UITableViewController {
+	
 	var rowModels: [LocalizationGrouping] {
 		return LocalizationManager.shared.localizationGroupings(forSearchTerm: searchBar.text)
 	}
-
-	var completion: (String) -> Void
-
+	
+	var completion: (String) -> ()
+	
 	lazy var allRowModels: [LocalizationGrouping] = {
 		return LocalizationManager.shared.localizationGroupings
 	}()
-
+	
 	lazy var searchBar: UISearchBar = {
+		
 		let searchBar = UISearchBar()
 		searchBar.searchBarStyle = UISearchBar.Style.default
 		searchBar.placeholder = " Search..."
@@ -28,17 +32,18 @@ final class SWLocalizationViewController: UITableViewController {
 		searchBar.backgroundImage = UIImage()
 		searchBar.delegate = self
 		return searchBar
+		
 	}()
 
-	init(completion: @escaping (String) -> Void) {
+	init(completion: @escaping (String) -> ()) {
 		self.completion = completion
 		super.init(nibName: nil, bundle: nil)
 	}
-
+	
 	required init?(coder: NSCoder) {
 		fatalError("init(coder:) has not been implemented")
 	}
-
+	
 	override func viewDidLoad() {
 		super.viewDidLoad()
 		title = "Localization"
@@ -46,47 +51,51 @@ final class SWLocalizationViewController: UITableViewController {
 		tableView.register(UITableViewCell.self, forCellReuseIdentifier: "cell")
 		tableView.translatesAutoresizingMaskIntoConstraints = false
 		tableView.backgroundView = nil
-		tableView.backgroundColor = darkBackgroundColor
+		tableView.backgroundColor = DarkBackgroundColor
 		tableView.allowsSelection = true
 		tableView.allowsMultipleSelection = false
-
+		
 		reloadTableView()
-
+		
 		navigationItem.titleView = searchBar
-
+		
 		tableView.keyboardDismissMode = .onDrag
-
-		navigationController?.navigationBar.tintColor = primaryColor
-		view.tintColor = primaryColor
-		tableView.sectionIndexColor = primaryColor
+		
+		navigationController?.navigationBar.tintColor = PrimaryColor
+		view.tintColor = PrimaryColor
+		tableView.sectionIndexColor = PrimaryColor
 	}
-
+	
 	func reloadTableView() {
 		tableView.reloadData()
 	}
+	
 }
 
+
+
 extension SWLocalizationViewController {
+	
 	override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
 		completion(rowModels[indexPath.section].localizations[indexPath.row].locale)
 		dismiss(animated: true, completion: nil)
 	}
-
+	
 	override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
 		return rowModels[section].title
 	}
-
+	
 	override func numberOfSections(in tableView: UITableView) -> Int {
 		return rowModels.count
 	}
-
+	
 	override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
 		return rowModels[section].localizations.count
 	}
-
+	
 	override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
 		let cell = UITableViewCell(style: .subtitle, reuseIdentifier: "cell")
-
+		
 		let item = rowModels[indexPath.section].localizations[indexPath.row]
 		cell.textLabel?.text = item.description
 		cell.textLabel?.textColor = .white
@@ -95,14 +104,17 @@ extension SWLocalizationViewController {
 		cell.backgroundView = nil
 		cell.backgroundColor = .clear
 		cell.contentView.backgroundColor = .clear
-
+		
 		return cell
 	}
-
+	
 	override func sectionIndexTitles(for tableView: UITableView) -> [String]? {
 		return rowModels.map { $0.title == "Localized" ? "★" : $0.title }
 	}
+	
+	
 }
+
 
 extension SWLocalizationViewController: UISearchBarDelegate {
 	func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {

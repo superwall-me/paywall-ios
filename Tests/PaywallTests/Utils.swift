@@ -8,13 +8,13 @@
 import Foundation
 
 struct TestError: Error {
-  let message: String
+    let message: String
 
-  init(_ message: String) {
-    self.message = message
-  }
+    init(_ message: String) {
+        self.message = message
+    }
 
-  var localizedDescription: String {
-    return message
-  }
+    public var localizedDescription: String {
+        return message
+    }
 }

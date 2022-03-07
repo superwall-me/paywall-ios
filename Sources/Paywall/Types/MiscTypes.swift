@@ -7,4 +7,4 @@
 
 import Foundation
 
-struct EmptyResponse: Decodable {}
+internal struct EmptyResponse: Decodable {}
