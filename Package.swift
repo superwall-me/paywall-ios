@@ -22,6 +22,10 @@ let package = Package(
     .package(
       url: "https://github.com/tikhop/ASN1Swift",
       .upToNextMajor(from: "1.2.4")
+    ),
+    .package(
+      url: "https://github.com/ernesto-elsaesser/WebArchiver.git",
+      .upToNextMajor(from: "1.0.0")
     )
   ],
   targets: [
@@ -33,6 +37,10 @@ let package = Package(
         .product(
           name: "ASN1Swift",
           package: "ASN1Swift"
+        ),
+        .product(
+          name: "WebArchiver",
+          package: "WebArchiver"
         )
       ],
       exclude: ["BundleHelper.swift"]

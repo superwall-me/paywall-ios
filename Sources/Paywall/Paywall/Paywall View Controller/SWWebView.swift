@@ -8,6 +8,7 @@
 
 import Foundation
 import WebKit
+import WebArchiver
 
 protocol SWWebViewDelegate: AnyObject {
   var paywallInfo: PaywallInfo { get }
@@ -65,6 +66,49 @@ final class SWWebView: WKWebView {
     scrollView.minimumZoomScale = 1.0
     scrollView.backgroundColor = .clear
     scrollView.isOpaque = false
+  }
+
+  func archiveName(for paywallResponse: PaywallResponse) -> String {
+    let key = Data(paywallResponse.url.utf8).base64EncodedString()
+    return "archive_\(key)_17.webarchive"
+  }
+
+  func loadWebpage(paywallResponse: PaywallResponse) {
+    let tempDir = FileManager.default.temporaryDirectory
+    let tempUrl = tempDir.appendingPathComponent(self.archiveName(for: paywallResponse)).standardizedFileURL
+    let manager = FileManager.default
+    if manager.fileExists(atPath: tempUrl.path) {
+      print("[!] archive load local", tempUrl)
+      loadFileURL(tempUrl, allowingReadAccessTo: URL(fileURLWithPath: ""))
+    } else {
+      let urlString = paywallResponse.url
+      guard let url = URL(string: urlString) else {
+        return
+      }
+      print("[!] archive load remote")
+      load(URLRequest(url: url))
+    }
+  }
+
+  func createArchive(paywallResponse: PaywallResponse) {
+    let urlString = paywallResponse.url
+    guard let url = URL(string: urlString) else { return }
+    let tempDir = FileManager.default.temporaryDirectory
+    let tempUrl = tempDir.appendingPathComponent(self.archiveName(for: paywallResponse)).standardizedFileURL
+    let manager = FileManager.default
+    if !manager.fileExists(atPath: tempUrl.path) {
+      WebArchiver.archive(url: url, cookies: [], includeJavascript: true, skipCache: true) { result in
+        if let data = result.plistData {
+          let manager = FileManager.default
+          let tempDir = manager.temporaryDirectory
+          let tempUrl = tempDir.appendingPathComponent(self.archiveName(for: paywallResponse))
+          if !manager.fileExists(atPath: tempUrl.path) {
+            print("[!] archive saved to local")
+            try? data.write(to: tempUrl)
+          }
+        }
+      }
+    }
   }
 
   required init?(coder: NSCoder) {

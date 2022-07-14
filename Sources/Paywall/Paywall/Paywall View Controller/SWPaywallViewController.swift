@@ -340,8 +340,13 @@ final class SWPaywallViewController: UIViewController, SWWebViewDelegate {
         } else {
           scaling = .identity
         }
-				self?.webView.transform = oldValue == .loadingPurchase ? scaling : translation
-				self?.showRefreshButtonAfterTimeout(false)
+
+        if let s = self {
+          s.webView.createArchive(paywallResponse: s.paywallResponse)
+        }
+
+        self?.webView.transform = oldValue == .loadingPurchase ? scaling : translation
+        self?.showRefreshButtonAfterTimeout(false)
         UIView.springAnimate(
           withDuration: 1,
           delay: 0.25,
@@ -465,7 +470,7 @@ final class SWPaywallViewController: UIViewController, SWWebViewDelegate {
     )
     Paywall.track(trackedEvent)
 
-    webView.load(URLRequest(url: url))
+//  webView.load(URLRequest(url: url))
 
     if paywallResponse.webViewLoadStartTime == nil {
       paywallResponse.webViewLoadStartTime = Date()
