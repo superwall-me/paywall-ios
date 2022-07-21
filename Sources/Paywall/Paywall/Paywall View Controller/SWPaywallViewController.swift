@@ -471,6 +471,7 @@ final class SWPaywallViewController: UIViewController, SWWebViewDelegate {
     Paywall.track(trackedEvent)
 
 //  webView.load(URLRequest(url: url))
+    webView.loadWebpage(paywallResponse: paywallResponse)
 
     if paywallResponse.webViewLoadStartTime == nil {
       paywallResponse.webViewLoadStartTime = Date()

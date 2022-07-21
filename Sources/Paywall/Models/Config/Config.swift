@@ -43,6 +43,8 @@ struct Config: Decodable {
       let productIds = paywall.products.map { $0.identifier }
       StoreKitManager.shared.getProducts(withIds: productIds)
 
+      
+
       // cache the view controller
       PaywallManager.shared.getPaywallViewController(
         responseIdentifiers: .init(paywallId: paywall.identifier),
